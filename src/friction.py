@@ -11,20 +11,19 @@ def reynolds_number(rho, velocity, diameter, viscosity):
 
 def flow_regime(re):
     if re <= 0:
-        return "ValueError"
+        raise ValueError("Reynolds number must be positive")
     elif re < 2300:
-        return "Laminar FLow"
+        return "laminar"
     elif re >= 2300 and re <= 4000:
-        return "Transitonal Flow"
+        return "transitional"
     else:
-        return "Turbulent Flow"
+        return "turbulent"
+
 
 def laminar_friction_factor(re):
     if re <= 0:
-        return "ValueError"
+        raise ValueError("Reynolds number must be positive")
     elif re < 2300:
-        return 64/re
-    elif re >= 2300 and re <= 4000:
-        return "n/a"
+        return 64 / re
     else:
-        return "n/a"
+        raise ValueError("Laminar formula only valid for Re < 2300")
