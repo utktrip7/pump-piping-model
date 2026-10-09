@@ -1,5 +1,10 @@
+import math
+
+
 def reynolds_number(rho, velocity, diameter, viscosity):
     """Calculate Reynolds number (dimensionless).
+
+    Re = rho * velocity * diameter / viscosity
 
     rho       : density in kg/m3
     velocity  : average velocity in m/s
@@ -10,20 +15,61 @@ def reynolds_number(rho, velocity, diameter, viscosity):
 
 
 def flow_regime(re):
+    """Classify the flow from its Reynolds number.
+
+    re : Reynolds number (dimensionless, must be positive)
+
+    Returns "laminar" (Re < 2300), "transitional" (2300 <= Re <= 4000)
+    or "turbulent" (Re > 4000).
+    Raises ValueError if re <= 0.
+    """
     if re <= 0:
         raise ValueError("Reynolds number must be positive")
     elif re < 2300:
         return "laminar"
-    elif re >= 2300 and re <= 4000:
+    elif re <= 4000:
         return "transitional"
     else:
         return "turbulent"
 
 
 def laminar_friction_factor(re):
+    """Darcy friction factor for laminar flow (Hagen-Poiseuille): f = 64 / Re.
+
+    re : Reynolds number (dimensionless), valid for 0 < Re < 2300
+
+    Raises ValueError if re <= 0 or re >= 2300.
+    """
     if re <= 0:
         raise ValueError("Reynolds number must be positive")
-    elif re < 2300:
-        return 64 / re
-    else:
+    if re >= 2300:
         raise ValueError("Laminar formula only valid for Re < 2300")
+    return 64 / re
+
+
+def turbulent_friction_factor(re, diameter, roughness):
+    """Darcy friction factor for turbulent flow (Swamee-Jain approximation).
+
+    f = 0.25 / [log10(roughness / (3.7 * diameter) + 5.74 / Re**0.9)]**2
+
+    re        : Reynolds number (dimensionless), must be > 4000
+    diameter  : pipe inner diameter in m (must be positive)
+    roughness : absolute pipe roughness in m (must not be negative)
+
+    Accurate to about 1-2% against the Colebrook equation for
+    5000 < Re < 1e8 and 1e-6 < roughness/diameter < 1e-2.
+    Raises ValueError for invalid inputs or Re <= 4000.
+    """
+    if re <= 0:
+        raise ValueError("Reynolds number must be positive")
+    if diameter <= 0:
+        raise ValueError("Diameter must be positive")
+    if roughness < 0:
+        raise ValueError("Roughness cannot be negative")
+    if re <= 4000:
+        raise ValueError("Turbulent formula only valid for Re > 4000")
+
+    term1 = roughness / (3.7 * diameter)
+    term2 = 5.74 / (re ** 0.9)
+    denominator = math.log10(term1 + term2) ** 2
+    return 0.25 / denominator
