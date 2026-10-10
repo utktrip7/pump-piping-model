@@ -6,18 +6,19 @@ import pytest
 from friction import (reynolds_number, flow_regime, laminar_friction_factor,
                       turbulent_friction_factor, friction_factor)
 
-D = 0.0254
-EPS = 0.0000254
+D = 0.0254        # pipe diameter, m
+EPS = 0.0000254   # pipe roughness, m (eps/D = 0.001)
 
 
 def test_reynolds_number():
+    # water at about 20 C, 1 m/s in the 25.4 mm lab pipe
     assert reynolds_number(998, 1.0, 0.0254, 0.001) == pytest.approx(25349.2, rel=1e-4)
 
 
 def test_flow_regime():
     assert flow_regime(1000) == "laminar"
-    assert flow_regime(2300) == "transitional"
-    assert flow_regime(4000) == "transitional"
+    assert flow_regime(2300) == "transitional"   # lower boundary
+    assert flow_regime(4000) == "transitional"   # upper boundary
     assert flow_regime(4001) == "turbulent"
 
 
@@ -30,6 +31,7 @@ def test_turbulent_values():
 
 
 def test_friction_factor_is_continuous():
+    # no sudden jumps at the regime boundaries
     assert friction_factor(2299, D, EPS) == pytest.approx(friction_factor(2300, D, EPS), rel=0.01)
     assert friction_factor(3999, D, EPS) == pytest.approx(friction_factor(4001, D, EPS), rel=0.01)
 
