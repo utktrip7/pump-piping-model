@@ -47,6 +47,19 @@ def laminar_friction_factor(re):
     return 64 / re
 
 
+def _swamee_jain(re, diameter, roughness):
+    """Swamee-Jain formula with no range checks (internal helper).
+
+    Kept separate so friction_factor() can evaluate it exactly at Re = 4000
+    for the transitional interpolation, while turbulent_friction_factor()
+    still refuses Re <= 4000.
+    """
+    term1 = roughness / (3.7 * diameter)
+    term2 = 5.74 / (re ** 0.9)
+    denominator = math.log10(term1 + term2) ** 2
+    return 0.25 / denominator
+
+
 def turbulent_friction_factor(re, diameter, roughness):
     """Darcy friction factor for turbulent flow (Swamee-Jain approximation).
 
@@ -68,8 +81,40 @@ def turbulent_friction_factor(re, diameter, roughness):
         raise ValueError("Roughness cannot be negative")
     if re <= 4000:
         raise ValueError("Turbulent formula only valid for Re > 4000")
+    return _swamee_jain(re, diameter, roughness)
 
-    term1 = roughness / (3.7 * diameter)
-    term2 = 5.74 / (re ** 0.9)
-    denominator = math.log10(term1 + term2) ** 2
-    return 0.25 / denominator
+
+def friction_factor(re, diameter, roughness):
+    """Darcy friction factor for any flow regime.
+
+    re        : Reynolds number (dimensionless)
+    diameter  : pipe inner diameter in m
+    roughness : absolute pipe roughness in m
+
+    Re < 2300          : laminar, f = 64 / Re
+    2300 <= Re <= 4000 : transitional, straight-line interpolation between the
+                         laminar value at Re = 2300 and the Swamee-Jain value
+                         at Re = 4000 (an approximation, a warning is printed)
+    Re > 4000          : turbulent, Swamee-Jain
+
+    Raises ValueError for re <= 0, diameter <= 0 or roughness < 0.
+    """
+    if re <= 0:
+        raise ValueError("Reynolds number must be positive")
+    if diameter <= 0:
+        raise ValueError("Diameter must be positive")
+    if roughness < 0:
+        raise ValueError("Roughness cannot be negative")
+
+    if re < 2300:
+        return laminar_friction_factor(re)
+
+    if re <= 4000:
+        print("Warning: transitional flow (2300 <= Re <= 4000), "
+              "friction factor is an interpolated approximation")
+        re_a, re_b = 2300, 4000
+        f_a = 64 / re_a  # laminar value at the lower end
+        f_b = _swamee_jain(re_b, diameter, roughness)  # helper, no range check
+        return f_a + (f_b - f_a) * (re - re_a) / (re_b - re_a)
+
+    return turbulent_friction_factor(re, diameter, roughness)
