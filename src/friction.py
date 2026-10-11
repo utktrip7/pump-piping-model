@@ -1,4 +1,5 @@
 import math
+import warnings
 
 
 def reynolds_number(rho, velocity, diameter, viscosity):
@@ -94,7 +95,7 @@ def friction_factor(re, diameter, roughness):
     Re < 2300          : laminar, f = 64 / Re
     2300 <= Re <= 4000 : transitional, straight-line interpolation between the
                          laminar value at Re = 2300 and the Swamee-Jain value
-                         at Re = 4000 (an approximation, a warning is printed)
+                         at Re = 4000 (an approximation, a warning is issued)
     Re > 4000          : turbulent, Swamee-Jain
 
     Raises ValueError for re <= 0, diameter <= 0 or roughness < 0.
@@ -110,8 +111,9 @@ def friction_factor(re, diameter, roughness):
         return laminar_friction_factor(re)
 
     if re <= 4000:
-        print("Warning: transitional flow (2300 <= Re <= 4000), "
-              "friction factor is an interpolated approximation")
+        warnings.warn("transitional flow (2300 <= Re <= 4000), "
+                      "friction factor is an interpolated approximation",
+                      stacklevel=2)
         re_a, re_b = 2300, 4000
         f_a = 64 / re_a  # laminar value at the lower end
         f_b = _swamee_jain(re_b, diameter, roughness)  # helper, no range check

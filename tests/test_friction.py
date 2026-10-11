@@ -1,13 +1,14 @@
 import sys
 import os
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 import pytest
 from friction import (reynolds_number, flow_regime, laminar_friction_factor,
                       turbulent_friction_factor, friction_factor)
 
-D = 0.0254        # pipe diameter, m
-EPS = 0.0000254   # pipe roughness, m (eps/D = 0.001)
+D = 0.0254  # pipe diameter, m
+EPS = 0.0000254  # pipe roughness, m (eps/D = 0.001)
 
 
 def test_reynolds_number():
@@ -17,8 +18,8 @@ def test_reynolds_number():
 
 def test_flow_regime():
     assert flow_regime(1000) == "laminar"
-    assert flow_regime(2300) == "transitional"   # lower boundary
-    assert flow_regime(4000) == "transitional"   # upper boundary
+    assert flow_regime(2300) == "transitional"  # lower boundary
+    assert flow_regime(4000) == "transitional"  # upper boundary
     assert flow_regime(4001) == "turbulent"
 
 
@@ -47,3 +48,8 @@ def test_bad_inputs_raise():
         turbulent_friction_factor(100000, 0, EPS)
     with pytest.raises(ValueError):
         friction_factor(100000, D, -1)
+
+
+def test_transitional_warning():
+    with pytest.warns(UserWarning):
+        friction_factor(3000, D, EPS)
