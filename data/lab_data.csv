@@ -1,0 +1,17 @@
+meter,source,q_actual_lpm,dh_mm,keep
+venturi,own,2.94,8,1
+venturi,own,6.72,11,1
+venturi,own,10.07,21,1
+venturi,own,13.0,44,1
+venturi,group5,1.2,3,0
+venturi,group5,6.0,44,1
+venturi,group5,11.1,53,1
+venturi,group5,12.9,65,1
+orifice,own,3.168,9,1
+orifice,own,6.48,23,1
+orifice,own,9.98,53,1
+orifice,own,12.76,110,1
+orifice,group5,1.2,8,0
+orifice,group5,6.0,16,1
+orifice,group5,11.1,82,1
+orifice,group5,12.9,160,1
