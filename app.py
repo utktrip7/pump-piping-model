@@ -11,7 +11,7 @@ from pipe import FITTING_K
 from meters import manometer_dp, meter_flow
 from validation import lab_results, error_table, TEXTBOOK
 
-st.title("Pump-Piping System Simulator")
+st.title("Pump-Piping System Model")
 
 # --- inputs ---
 st.sidebar.header("Fluid")
