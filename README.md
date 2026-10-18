@@ -2,7 +2,7 @@
 
 Python/Streamlit tool that calculates pipe pressure drop, the operating point of a centrifugal pump in a piping system, and flow through Venturi and orifice meters. It is validated against my own fluid mechanics lab data and includes a small ML surrogate model.
 
-**Live app:** [your Streamlit link]
+**Live app:** (https://pump-piping-model-vv6glbjfmvv9hxtjnnt9u9.streamlit.app/)
 
 ## Features
 - **Pump & system:** friction loss in straight pipe and fittings, pump curve fit, operating point (flow and head where the pump curve meets the system curve)
