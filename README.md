@@ -1,4 +1,4 @@
-# Pump-Piping System Simulator
+# Pump-Piping System Model
 
 Python/Streamlit tool that calculates pipe pressure drop, the operating point of a centrifugal pump in a piping system, and flow through Venturi and orifice meters. Validated against my own fluid mechanics lab data.
 
