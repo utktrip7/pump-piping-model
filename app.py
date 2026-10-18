@@ -1,8 +1,10 @@
 import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "scripts"))
 
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import streamlit as st
 
@@ -10,8 +12,9 @@ from pump import fit_pump_curve, pump_head, system_head, operating_point
 from pipe import FITTING_K
 from meters import manometer_dp, meter_flow
 from validation import lab_results, error_table, TEXTBOOK
+from surrogate import RANGES, FEATURES, physics_flow, train
 
-st.title("Pump-Piping System Model")
+st.title("Pump-Piping System Simulator")
 
 # --- inputs ---
 st.sidebar.header("Fluid")
@@ -33,8 +36,15 @@ st.sidebar.header("Pump data")
 flows_txt = st.sidebar.text_input("Flow (L/s)", "0, 0.5, 1.0, 1.5, 2.0")
 heads_txt = st.sidebar.text_input("Head (m)", "20, 19, 16, 11, 4")
 
+
+@st.cache_resource(show_spinner="Training the surrogate model (first load only)...")
+def get_model():
+    return train()
+
+
 # --- tabs ---
-tab1, tab2, tab3 = st.tabs(["Pump & system", "Meter calculator", "Lab validation"])
+tab1, tab2, tab3, tab4 = st.tabs(["Pump & system", "Meter calculator",
+                                  "Lab validation", "ML surrogate"])
 
 with tab1:
     try:
@@ -102,3 +112,26 @@ with tab3:
     st.caption("Used = data consistent and Cd < 1 (Cd above 1 is physically "
                "impossible). Dashed lines: textbook Cd (0.98 Venturi, 0.61 orifice).")
     st.dataframe(df.round(3))
+
+with tab4:
+    st.caption("Random Forest trained on 20,000 simulated systems (water, fixed pump "
+               "curve). Valid only inside the slider ranges.")
+    s_static = st.slider("Static head (m)", *RANGES["static_head_m"], 5.0)
+    s_length = st.slider("Length (m)", *RANGES["length_m"], 10.0)
+    s_d = st.slider("Diameter (mm)", *RANGES["diameter_mm"], 25.4, step=0.1)
+    s_eps = st.slider("Roughness (mm)", *RANGES["roughness_mm"], 0.0015,
+                      step=0.0005, format="%.4f")
+    s_elbow = st.slider("90 degree elbows", 0, 10, 4)
+    s_globe = st.slider("Globe valves", 0, 5, 1)
+
+    x = [s_static, s_length, s_d, s_eps, s_elbow, s_globe]
+    try:
+        q_phys = physics_flow(*x)
+    except ValueError as e:
+        st.error(str(e))
+    else:
+        q_ml = get_model().predict(pd.DataFrame([x], columns=FEATURES))[0]
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Physics model", f"{q_phys:.3f} L/s")
+        c2.metric("ML surrogate", f"{q_ml:.3f} L/s")
+        c3.metric("Difference", f"{(q_ml - q_phys) / q_phys * 100:+.1f} %")
